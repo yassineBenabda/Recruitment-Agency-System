@@ -1,5 +1,6 @@
 package com.agence.recruitment.controller;
 
+import com.agence.recruitment.model.Candidat;
 import com.agence.recruitment.util.Database;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -24,6 +25,9 @@ public class CandidatFormController {
     private TextField emailField;
 
     @FXML
+    private TextField telephoneField;
+
+    @FXML
     private DatePicker dateNaissancePicker;
 
     @FXML
@@ -33,6 +37,7 @@ public class CandidatFormController {
     private Label cvFileNameLabel;
 
     private File selectedCVFile;
+    private Candidat candidatToUpdate;
 
     @FXML
     public void initialize() {
@@ -50,39 +55,64 @@ public class CandidatFormController {
         });
     }
 
+    public void setCandidatToUpdate(Candidat candidat) {
+        this.candidatToUpdate = candidat;
+        if (candidat != null) {
+            nomField.setText(candidat.getNom());
+            emailField.setText(candidat.getEmail());
+            telephoneField.setText(candidat.getTelephone());
+            dateNaissancePicker.setValue(candidat.getDateNaissance());
+            cvFileNameLabel.setText(new File(candidat.getCvPath()).getName());
+        }
+    }
+
     @FXML
     public void handleSave() {
         String nom = nomField.getText();
         String email = emailField.getText();
+        String telephone = telephoneField.getText();
         LocalDate dateNaissance = dateNaissancePicker.getValue();
 
-        if (nom.isEmpty() || email.isEmpty() || dateNaissance == null || selectedCVFile == null) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Tous les champs doivent être remplis et un CV doit être sélectionné.");
+        if (nom.isEmpty() || email.isEmpty() || telephone.isEmpty() || dateNaissance == null) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Tous les champs doivent être remplis.");
             return;
         }
 
-        // Copy CV to the cv_uploads folder
-        File destDir = new File("src/main/resources/cv_uploads");
-        if (!destDir.exists()) destDir.mkdirs();
-        File destFile = new File(destDir, selectedCVFile.getName());
+        String cvPath = candidatToUpdate != null ? candidatToUpdate.getCvPath() : null;
 
-        try {
-            Files.copy(selectedCVFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'enregistrer le fichier CV.");
-            e.printStackTrace();
-            return;
+        if (selectedCVFile != null) {
+            File destDir = new File("src/main/resources/cv_uploads");
+            if (!destDir.exists()) destDir.mkdirs();
+            File destFile = new File(destDir, selectedCVFile.getName());
+
+            try {
+                Files.copy(selectedCVFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                cvPath = destFile.getPath();
+            } catch (IOException e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'enregistrer le fichier CV.");
+                e.printStackTrace();
+                return;
+            }
         }
 
-        String sql = "INSERT INTO candidat (nom, email, date_naissance, cv_path) VALUES (?, ?, ?, ?)";
+        if (candidatToUpdate == null) {
+            insertCandidat(nom, email, telephone, dateNaissance, cvPath);
+        } else {
+            updateCandidat(nom, email, telephone, dateNaissance, cvPath);
+        }
+    }
+
+    private void insertCandidat(String nom, String email, String telephone, LocalDate dateNaissance, String cvPath) {
+        String sql = "INSERT INTO candidat (nom, email, telephone, date_naissance, cv_path) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, nom);
             stmt.setString(2, email);
-            stmt.setDate(3, java.sql.Date.valueOf(dateNaissance));
-            stmt.setString(4, destFile.getPath());
+            stmt.setString(3, telephone);
+            stmt.setDate(4, java.sql.Date.valueOf(dateNaissance));
+            stmt.setString(5, cvPath);
 
             int rows = stmt.executeUpdate();
             if (rows > 0) {
@@ -98,12 +128,41 @@ public class CandidatFormController {
         }
     }
 
+    private void updateCandidat(String nom, String email, String telephone, LocalDate dateNaissance, String cvPath) {
+        String sql = "UPDATE candidat SET nom = ?, email = ?, telephone = ?, date_naissance = ?, cv_path = ? WHERE id = ?";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nom);
+            stmt.setString(2, email);
+            stmt.setString(3, telephone);
+            stmt.setDate(4, java.sql.Date.valueOf(dateNaissance));
+            stmt.setString(5, cvPath);
+            stmt.setInt(6, candidatToUpdate.getId());
+
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Candidat mis à jour avec succès !");
+                clearForm();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la mise à jour en base.");
+            }
+
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur base de données : " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void clearForm() {
         nomField.clear();
         emailField.clear();
+        telephoneField.clear();
         dateNaissancePicker.setValue(null);
         cvFileNameLabel.setText("");
         selectedCVFile = null;
+        candidatToUpdate = null;
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

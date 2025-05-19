@@ -42,4 +42,8 @@ public class Recruteur {
     public void setEstEntreprise(boolean estEntreprise) {
         this.estEntreprise = estEntreprise;
     }
+
+    public boolean getEstEntreprise() {
+        return estEntreprise;
+    }
 }
