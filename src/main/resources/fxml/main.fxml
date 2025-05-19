@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.agence.recruitment.controller.MainController"
+            prefWidth="800" prefHeight="600">
+
+    <top>
+        <MenuBar>
+            <Menu text="Ajouter">
+                <MenuItem text="Candidat" onAction="#showCandidatForm"/>
+                <MenuItem text="Recruteur" onAction="#showRecruteurForm"/>
+                <MenuItem text="Offre" onAction="#showOffreForm"/>
+            </Menu>
+            <Menu text="Lister">
+                <MenuItem text="Candidats" onAction="#showCandidatList"/>
+                <MenuItem text="Recruteurs" onAction="#showRecruteurList"/>
+                <MenuItem text="Offres" onAction="#showOffreList"/>
+            </Menu>
+        </MenuBar>
+    </top>
+
+    <center>
+        <StackPane fx:id="contentPane">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+        </StackPane>
+    </center>
+</BorderPane>

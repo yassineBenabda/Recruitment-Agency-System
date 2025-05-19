@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox spacing="15" alignment="CENTER" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.agence.recruitment.controller.RecruteurFormController" style="-fx-padding: 20;">
+    <Label text="Ajouter un Recruteur" style="-fx-font-size: 18px;" />
+    <GridPane hgap="10" vgap="10">
+        <Label text="Nom:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="nomField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Email:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="emailField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Est une entreprise ?" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <CheckBox fx:id="entrepriseCheckBox" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    </GridPane>
+    <Button text="Enregistrer" onAction="#handleSave" maxWidth="150"/>
+</VBox>
